@@ -1,4 +1,3 @@
-"use client";
 import {
   navigationMenuTriggerStyle,
   NavigationMenu,
@@ -12,10 +11,9 @@ import {
 } from "@/components/ui/navigation-menu";
 import Link from "next/link";
 import Image from "next/image";
-import { useSelectedLayoutSegment } from "next/navigation";
+import NavigationAccount from "./navigation-account";
 
 export default function Navigation() {
-  const segment = useSelectedLayoutSegment();
   const menuData = [
     {
       href: "/",
@@ -49,8 +47,8 @@ export default function Navigation() {
 
   return (
     <div className="bg-primary-green w-screen flex justify-center">
-      <NavigationMenu className="max-w-screen-lg">
-        <NavigationMenuList>
+      <NavigationMenu className="max-w-screen-lg mx-4">
+        <NavigationMenuList className="w-full">
           <NavigationMenuItem>
             <Link href="/" className="block items-center">
               <Image
@@ -61,11 +59,11 @@ export default function Navigation() {
               />
             </Link>
           </NavigationMenuItem>
-
           {menuData.map((item, key) => {
             return menuItem(item.href, item.text, key);
           })}
         </NavigationMenuList>
+        <NavigationAccount />
       </NavigationMenu>
     </div>
   );
