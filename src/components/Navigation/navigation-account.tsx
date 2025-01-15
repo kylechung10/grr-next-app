@@ -1,5 +1,7 @@
+"use client";
 import { useEffect, useState } from "react";
-import { auth, signIn, signOut } from "@/auth";
+import { getSession, signIn, signOut } from "next-auth/react";
+import { Session } from "next-auth";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { LogOut, Settings, User } from "lucide-react";
@@ -13,21 +15,15 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export default function NavigationAccount() {
-  const [session, setSession] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const [session, setSession] = useState<Session | null>(null);
 
   useEffect(() => {
     async function fetchSession() {
-      const sessionData = await auth();
+      const sessionData = await getSession();
       setSession(sessionData);
-      setLoading(false);
     }
     fetchSession();
   }, []);
-
-  if (loading) {
-    return <div>Loading...</div>;
-  }
 
   if (!session) {
     return (
@@ -35,7 +31,7 @@ export default function NavigationAccount() {
         className="ml-auto"
         onSubmit={async (event) => {
           event.preventDefault();
-          await signIn();
+          await signIn("discord", { callbackUrl: "/redirect-login" });
         }}
       >
         <Button variant="outline">Log In</Button>
@@ -68,12 +64,13 @@ export default function NavigationAccount() {
         <DropdownMenuSeparator />
         <DropdownMenuItem>
           <form
+            className="w-full"
             onSubmit={async (event) => {
               event.preventDefault();
-              await signOut();
+              await signOut({ callbackUrl: "/" });
             }}
           >
-            <button className="flex items-center gap-2 hover:cursor-pointer">
+            <button className="w-full flex items-center gap-2 hover:cursor-pointer">
               <LogOut />
               Logout
             </button>

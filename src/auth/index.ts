@@ -1,5 +1,7 @@
 import NextAuth from "next-auth";
 import Discord from "next-auth/providers/discord";
+import { db } from "@/db/index";
+import { DrizzleAdapter } from "@auth/drizzle-adapter";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
@@ -8,18 +10,33 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         "https://discord.com/api/oauth2/authorize?scope=identify+email+guilds+guilds.members.read",
     }),
   ],
+  adapter: DrizzleAdapter(db),
   callbacks: {
-    async jwt({ token, account }) {
-      if (account) {
-        console.log("this is a token", token);
-        console.log("this is a account", account);
-        token.accessToken = account.access_token; // Save the access token
+    async signIn({ account }) {
+      const accessToken = account?.access_token;
+
+      if (!accessToken) return false;
+
+      const guildsResponse = await fetch(
+        "https://discord.com/api/users/@me/guilds",
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+
+      const guilds = await guildsResponse.json();
+      const serverId = process.env.DISCORD_SERVER_ID as string;
+      const isMember = guilds.some((guild: any) => guild.id === serverId);
+      console.log("IS MEMBER?", isMember);
+
+      // If not member of the GRR Discord, redirect
+      if (!isMember) {
+        return "/join-discord";
       }
-      return token;
-    },
-    async session({ session, token }) {
-      session.accessToken = token.accessToken as string; // Add access token to session
-      return session;
+
+      return true; // Allow login
     },
   },
 });
